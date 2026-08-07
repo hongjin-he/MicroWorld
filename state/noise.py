@@ -19,8 +19,16 @@ from numpy.typing import NDArray
 
 @dataclass
 class DualNoiseParams:
-    sigma_tau: float        # physical noise volatility (σ_τ)
-    lambda_eta: float       # behavioral jump intensity (λ_η)
+    """
+    Calibrated dual-noise parameters.
+
+    σ_τ and λ_η are both *per unit time* on the same clock (per day when
+    calibrated from bars whose dt is expressed in days). tau_t and
+    cramer_rao_bound add them, so a mismatch there silently rescales
+    Theorem III.1.
+    """
+    sigma_tau: float        # physical noise volatility (σ_τ), per √(unit time)
+    lambda_eta: float       # behavioral jump intensity (λ_η), jumps per unit time
     m2_eta: float           # second moment of jump size ∫z² ν^η(dz)
     alpha_levy: float = 1.5 # Lévy tail index ∈ (1, 2)
 
@@ -67,6 +75,11 @@ class DualNoiseCalibrator:
 
         Test statistic: |r_t| / sigma_hat vs c_alpha,
         where sigma_hat = sqrt(BPV/n) is the per-bar volatility estimate.
+
+        `dt` is accepted for signature symmetry with calibrate() but is not
+        used: both sides of the comparison are per-bar quantities, so the bar
+        width cancels. Rescaling to a per-unit-time clock happens in
+        calibrate(), not here.
         """
         if len(returns) == 0:
             return np.zeros(0, dtype=bool)
@@ -79,12 +92,31 @@ class DualNoiseCalibrator:
         intraday_returns: NDArray[np.float64],
         dt: float = 1 / 78,
     ) -> DualNoiseParams:
+        """
+        Estimate (σ_τ, λ_η, m₂^η) from a sample of `n` bars of width `dt`.
+
+        Units. Every rate below is per unit of the clock `dt` is measured in
+        (dt = 1/78 → bars are 1/78 of a day → rates are per day). Theorem III.1
+        adds σ_τ² and λ_η·m₂^η, so the two must share that clock:
+
+            T        = n · dt                total sample time
+            σ_τ²     = BPV / T               integrated variance ÷ elapsed time
+            λ_η      = N_jumps / T           jump count ÷ elapsed time
+            m₂^η     = mean(z²)              jump-size second moment (no time unit)
+
+        Passing daily bars therefore means dt=1.0, not dt=1/252.
+        """
+        n = len(intraday_returns)
+        if n == 0 or dt <= 0:
+            return DualNoiseParams(sigma_tau=0.0, lambda_eta=0.0, m2_eta=1e-6)
+
         bpv = self.estimate_bpv(intraday_returns)
         jump_mask = self.detect_jumps(intraday_returns, bpv, dt)
         jump_sizes = intraday_returns[jump_mask]
 
-        sigma_tau = np.sqrt(bpv / len(intraday_returns))
-        lambda_eta = jump_mask.sum() * dt if dt > 0 else 0.0
+        elapsed = n * dt
+        sigma_tau = float(np.sqrt(bpv / elapsed))
+        lambda_eta = float(jump_mask.sum() / elapsed)
         m2_eta = float(np.mean(jump_sizes**2)) if len(jump_sizes) > 0 else 1e-6
 
         return DualNoiseParams(

@@ -138,6 +138,127 @@ class TestCalibration:
             "Higher vol should give higher sigma_tau"
 
 
+class TestCalibrationUnits:
+    """
+    Regression tests for the per-unit-time scaling in calibrate().
+
+    The prior code computed `lambda_eta = N_jumps * dt`, which is the
+    reciprocal of a rate: it under-reported intensity by a factor of n·dt²
+    and — the giveaway — did not change when the sample got longer. Nothing
+    caught it because the only assertion on lambda_eta was `>= 0`, which a
+    dimensionally inverted quantity satisfies just fine.
+
+    These tests pin the SEMANTICS (λ is a rate), not a magic number.
+    """
+
+    @staticmethod
+    def _planted(n_days, bars_per_day, jumps_per_day, seed=7):
+        """Quiet Brownian bars with `jumps_per_day` unmistakable jumps planted."""
+        rng = np.random.default_rng(seed)
+        n = n_days * bars_per_day
+        r = rng.normal(0, 0.0005, n)
+        idx = np.linspace(0, n - 1, n_days * jumps_per_day).astype(int)
+        r[idx] += 0.05
+        return r, len(set(idx))
+
+    def test_lambda_eta_recovers_planted_intensity(self):
+        """λ_η must come back in jumps per day, not jumps × dt."""
+        bars = 78
+        r, n_jumps = self._planted(n_days=10, bars_per_day=bars, jumps_per_day=3)
+
+        params = DualNoiseCalibrator().calibrate(r, dt=1 / bars)
+
+        # 10 days, 3 planted jumps/day → ~3/day. Detector may miss a few, so
+        # allow a band — but the old code returned 0.038 here, 80x low.
+        assert 2.0 < params.lambda_eta < 4.0, (
+            f"λ_η = {params.lambda_eta:.4f}, expected ≈ {n_jumps / 10:.1f} jumps/day"
+        )
+
+    def test_lambda_eta_is_invariant_to_sample_length(self):
+        """A rate is a property of the process, not of how long you watched it."""
+        bars = 78
+        short, _ = self._planted(n_days=2, bars_per_day=bars, jumps_per_day=3)
+        long, _ = self._planted(n_days=20, bars_per_day=bars, jumps_per_day=3)
+
+        cal = DualNoiseCalibrator()
+        lam_short = cal.calibrate(short, dt=1 / bars).lambda_eta
+        lam_long = cal.calibrate(long, dt=1 / bars).lambda_eta
+
+        assert abs(lam_short - lam_long) < 1.0, (
+            f"intensity drifted with sample length: {lam_short:.3f} vs {lam_long:.3f}"
+        )
+
+    def test_same_jump_count_over_longer_window_is_a_lower_rate(self):
+        """
+        Holds jump COUNT fixed and varies elapsed time — the one comparison a
+        count-shaped estimator cannot fake. 6 jumps in 2 days is 3/day;
+        6 jumps in 20 days is 0.3/day. `N_jumps * dt` returns the same number
+        for both, because neither N nor dt changed.
+        """
+        bars = 78
+        rng = np.random.default_rng(3)
+
+        def six_jumps_over(n_days):
+            n = n_days * bars
+            r = rng.normal(0, 0.0005, n)
+            r[np.linspace(0, n - 1, 6).astype(int)] += 0.05
+            return r
+
+        cal = DualNoiseCalibrator()
+        lam_dense = cal.calibrate(six_jumps_over(2), dt=1 / bars).lambda_eta
+        lam_sparse = cal.calibrate(six_jumps_over(20), dt=1 / bars).lambda_eta
+
+        assert lam_dense > 5 * lam_sparse, (
+            f"same 6 jumps over 2d vs 20d gave {lam_dense:.3f} vs {lam_sparse:.3f} "
+            f"— λ_η is tracking count, not rate"
+        )
+
+    def test_sigma_tau_is_per_unit_time_not_per_bar(self):
+        """
+        σ_τ shares the clock with λ_η, so it scales as BPV/(n·dt). Sampling the
+        SAME process at 5-min vs 1-min bars must give the same daily σ_τ; the
+        old per-bar estimate `sqrt(BPV/n)` differed by √5 between them.
+        """
+        rng = np.random.default_rng(11)
+        daily_sigma = 0.02
+
+        cal = DualNoiseCalibrator()
+        est = {}
+        for bars in (78, 390):  # 5-min and 1-min bars over one day
+            r = rng.normal(0, daily_sigma / np.sqrt(bars), bars * 5)
+            est[bars] = cal.calibrate(r, dt=1 / bars).sigma_tau
+
+        np.testing.assert_allclose(est[78], est[390], rtol=0.25)
+        np.testing.assert_allclose(est[78], daily_sigma, rtol=0.25)
+
+    def test_cramer_rao_bound_is_invariant_to_sampling_frequency(self):
+        """
+        Theorem III.1 is a statement about a PROCESS, so observing that process
+        on 5-min vs 1-min bars must yield the same 1-day bound. This is the
+        end-to-end check that σ_τ² and λ_η·m₂^η share a clock: under the old
+        scaling σ_τ² moved by 5x and λ_η by 25x between these two samplings,
+        in opposite directions.
+        """
+        cal = DualNoiseCalibrator()
+        bound = {}
+        for bars in (78, 390):
+            rng = np.random.default_rng(5)
+            n = bars * 10
+            r = rng.normal(0, 0.02 / np.sqrt(bars), n)
+            r[np.linspace(0, n - 1, 30).astype(int)] += 0.05  # 3 jumps/day
+            bound[bars] = cal.calibrate(r, dt=1 / bars).cramer_rao_bound(h=1.0)
+
+        np.testing.assert_allclose(bound[78], bound[390], rtol=0.35)
+
+    def test_empty_and_degenerate_input(self):
+        """Guard the early return added alongside the rescaling."""
+        cal = DualNoiseCalibrator()
+        for returns, dt in [(np.array([]), 1 / 78), (np.array([0.01, 0.02]), 0.0)]:
+            p = cal.calibrate(returns, dt=dt)
+            assert np.isfinite(p.sigma_tau) and np.isfinite(p.lambda_eta)
+            assert p.m2_eta > 0
+
+
 class TestCramerRaoBound:
     """Regression tests for DualNoiseParams.cramer_rao_bound (Bug #3)."""
 
