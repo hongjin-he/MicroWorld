@@ -36,7 +36,9 @@ calibrator = DualNoiseCalibrator()
 results = {}
 for ticker in tickers[:10]:   # demo: first 10 tickers
     rets = df.xs(ticker, level="ticker")["returns"].values
-    params = calibrator.calibrate(rets, dt=1/252)
+    # synthetic_market generates DAILY bars, so dt = 1 day. (dt=1/252 would
+    # declare each bar to be 1/252 of a day and inflate every rate by 252×.)
+    params = calibrator.calibrate(rets, dt=1.0)
     results[ticker] = params
 
 avg_sigma_tau = np.mean([p.sigma_tau for p in results.values()])

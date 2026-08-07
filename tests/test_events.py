@@ -313,5 +313,100 @@ class TestSystemicCrisisCorrelation:
         assert op.Sigma_w.shape == (5, 5)
 
 
+class TestCompositionNoisePropagation:
+    """
+    Regression tests for the Sigma_w propagation law in compose().
+
+    Sigma_w is documented as a Cholesky FACTOR, and every other test in this
+    file reads its covariance as `S @ S.T`. compose() used `S @ S` — which
+    agrees only when S is diagonal. Every composition test above uses
+    diagonal-noise operators, and systemic_crisis_operator (the one
+    constructor with off-diagonal noise) was never composed, so the gap
+    stayed invisible.
+
+    The failure mode was not merely a wrong covariance: for the crisis
+    operator `S @ S` is not PSD, so np.linalg.cholesky raised LinAlgError and
+    a systemic crisis could not be composed with any other event at all.
+    """
+
+    @staticmethod
+    def _cov(op):
+        return op.Sigma_w @ op.Sigma_w.T
+
+    def test_composition_covariance_matches_propagation_law(self):
+        """
+        Cov(A1(A2 s + L2 ε2) + L1 ε1) = L1 L1ᵀ + A1 (L2 L2ᵀ) A1ᵀ.
+
+        Uses systemic_crisis as the INNER operator so its off-diagonal block
+        is the thing being propagated.
+        """
+        n = 3
+        op_crisis = systemic_crisis_operator(severity=0.8, n=n)
+        op_rate = rate_change_operator(change_bps=50, n=n)
+
+        comp = compose(op_rate, op_crisis)  # crisis first, then rate change
+
+        expected = (
+            self._cov(op_rate)
+            + op_rate.A_w @ self._cov(op_crisis) @ op_rate.A_w.T
+        )
+        np.testing.assert_allclose(self._cov(comp), expected, atol=1e-8)
+
+    def test_composition_preserves_cross_asset_correlation(self):
+        """
+        The economic content: composing a macro event onto a systemic crisis
+        must not destroy the crisis's correlated-price structure. `S @ S`
+        silently reshapes those off-diagonals.
+        """
+        n = 4
+        comp = compose(
+            rate_change_operator(change_bps=25, n=n),
+            systemic_crisis_operator(severity=0.9, n=n),
+        )
+        Cov = self._cov(comp)
+        pidx = [i * 5 + P for i in range(n)]
+        for a in range(n):
+            for b in range(a + 1, n):
+                assert Cov[pidx[a], pidx[b]] > 1e-6, (
+                    f"price correlation between assets {a},{b} lost in composition"
+                )
+
+    def test_composed_sigma_is_a_valid_cholesky_factor(self):
+        """Result must be lower-triangular so it composes again under the same law."""
+        comp = compose(
+            systemic_crisis_operator(severity=0.6, n=3),
+            rate_change_operator(change_bps=25, n=3),
+        )
+        S = comp.Sigma_w
+        np.testing.assert_allclose(S, np.tril(S), atol=1e-12)
+        assert np.linalg.eigvalsh(self._cov(comp)).min() >= -1e-10
+
+    def test_composition_is_associative_in_covariance(self):
+        """
+        Three-way composition must give the same covariance either way it is
+        bracketed — the property that makes the monoid claim in the module
+        docstring meaningful, and the one an S@S law breaks.
+        """
+        n = 3
+        a = rate_change_operator(change_bps=25, n=n)
+        b = systemic_crisis_operator(severity=0.7, n=n)
+        c = earnings_shock_operator(surprise_pct=8.0, asset_idx=1, n=n)
+
+        left = compose(compose(a, b), c)
+        right = compose(a, compose(b, c))
+        np.testing.assert_allclose(self._cov(left), self._cov(right), atol=1e-7)
+
+    def test_diagonal_noise_case_is_unchanged(self):
+        """
+        Guards against over-correction: for diagonal Sigma the old and new laws
+        agree, so previously-correct behaviour must not move.
+        """
+        op1 = stock_split_operator(ratio=2.0, n=1)
+        op2 = dividend_operator(div_yield=0.02, asset_idx=0, n=1)
+        comp = compose(op1, op2)
+        expected = self._cov(op1) + op1.A_w @ self._cov(op2) @ op1.A_w.T
+        np.testing.assert_allclose(self._cov(comp), expected, atol=1e-9)
+
+
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])
