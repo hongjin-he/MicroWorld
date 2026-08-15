@@ -25,11 +25,16 @@ def load_predictions() -> dict:
     """Load latest model outputs from DB. Replace with real DB query."""
     n = 60
     t_hist = pd.date_range("2024-01-01", periods=120, freq="B")
-    t_fut  = pd.date_range(t_hist[-1], periods=n, freq="B")
     price_hist = np.cumprod(1 + np.random.randn(120) * 0.01) * 100
-    p50  = price_hist[-1] * np.cumprod(1 + np.random.randn(n) * 0.008)
-    p10  = p50 * 0.92
-    p90  = p50 * 1.08
+    t_fut_future = pd.date_range(t_hist[-1] + pd.offsets.BDay(1), periods=n, freq="B")
+    raw_forecast = np.cumprod(1 + np.random.randn(n) * 0.008)
+    p50_future = price_hist[-1] * raw_forecast
+
+    # Last historical point
+    t_fut = t_hist[-1:].union(t_fut_future)
+    p50 = np.insert(p50_future, 0, price_hist[-1])
+    p10 = np.insert(p50_future * 0.92, 0, price_hist[-1])
+    p90 = np.insert(p50_future * 1.08, 0, price_hist[-1])
     return {
         "sharpe": 1.72, "sharpe_delta": 0.08,
         "mfg_residual": 0.0073,
@@ -67,17 +72,23 @@ st.divider()
 
 # ── Price fan chart ───────────────────────────────────────────────────────────
 fig_price = go.Figure()
-fig_price.add_trace(go.Scatter(
-    x=preds["t_hist"], y=preds["price_hist"],
-    name="Historical", line=dict(color="white", width=2)))
-fig_price.add_trace(go.Scatter(
-    x=preds["t_fut"], y=preds["p50"],
-    name="MFG Median", line=dict(color="orange", width=2)))
+# 1. CI Band first
 fig_price.add_trace(go.Scatter(
     x=list(preds["t_fut"]) + list(reversed(preds["t_fut"])),
     y=list(preds["p10"]) + list(reversed(preds["p90"])),
-    fill="toself", fillcolor="rgba(93,173,226,0.15)",
-    line=dict(color="rgba(255,255,255,0)"), name="10%–90% CI"))
+    fill="toself", fillcolor="rgba(93,173,226,0.18)",
+    line=dict(color="rgba(255,255,255,0)"), hoverinfo="skip", name="10%–90% CI"))
+
+# 2. Historical line
+fig_price.add_trace(go.Scatter(
+    x=preds["t_hist"], y=preds["price_hist"],
+    name="Historical", line=dict(color="white", width=2)))
+
+# 3. Median line 
+fig_price.add_trace(go.Scatter(
+    x=preds["t_fut"], y=preds["p50"],
+    name="MFG Median", line=dict(color="orange", width=2)))
+
 fig_price.update_layout(template="plotly_dark", title="60-Day Price Forecast (MFG equilibrium paths)")
 st.plotly_chart(fig_price, use_container_width=True)
 
