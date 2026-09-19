@@ -1,0 +1,15 @@
+name: Feature / improvement
+description: Propose a new module, agent type, data connector, or experiment
+labels: [enhancement]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem does this solve?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed approach
+      description: Which modules does it touch (agents/, events/, game/, state/ ...)?

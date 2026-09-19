@@ -833,7 +833,7 @@ def compose(op1: EventOperator, op2: EventOperator) -> EventOperator:
     Composition law for affine operators:
       A_comp = A1 @ A2
       b_comp = A1 @ b2 + b1
-      Σ_comp = √(Σ1² + (A1 @ Σ2)²)   [uncertainty propagation]
+      Σ_comp Σ_compᵀ = Σ1 Σ1ᵀ + A1 (Σ2 Σ2ᵀ) A1ᵀ   [uncertainty propagation]
 
     Raises ValueError on domain mismatch.
     """
@@ -852,6 +852,19 @@ def compose(op1: EventOperator, op2: EventOperator) -> EventOperator:
 
     A_comp = op1.A_w @ op2.A_w
     b_comp = op1.A_w @ op2.b_w + op1.b_w
+    # Uncertainty propagation. Sigma_w is a Cholesky FACTOR, so the covariance
+    # it represents is Σ Σᵀ — not Σ Σ. The two coincide only for diagonal Σ,
+    # which is why this went unnoticed: systemic_crisis_operator is the one
+    # constructor with off-diagonal noise, and nothing composed it. For that
+    # operator `Σ Σ` is not even PSD, so the cholesky() below raised
+    # LinAlgError — composing a systemic crisis with anything was impossible.
+    #   Cov(A1(A2 s + L2 ε2) + L1 ε1) = L1 L1ᵀ + A1 (L2 L2ᵀ) A1ᵀ
+    Cov_comp = (
+        op1.Sigma_w @ op1.Sigma_w.T
+        + op1.A_w @ (op2.Sigma_w @ op2.Sigma_w.T) @ op1.A_w.T
+    )
+    # Back to a Cholesky factor, so the result composes again under this same law.
+    Sigma_comp = np.linalg.cholesky(Cov_comp + 1e-9 * np.eye(Cov_comp.shape[0]))
 
     return EventOperator(
         name=f"({op1.name}) ∘ ({op2.name})",
