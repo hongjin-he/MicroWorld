@@ -89,6 +89,11 @@ PROMPT_TEMPLATES: dict[InvestorType, dict[str, str]] = {
     },
 }
 
+OUTPUT_CONTRACT = (
+    "Respond with only a JSON object mapping each ticker to its portfolio "
+    "weight as a decimal, weights summing to 1.0, and no other text."
+)
+
 # Risk tolerance is held fixed per archetype rather than sampled: the audit
 # varies one thing at a time, and a random risk score would confound
 # archetype effects with risk effects.
@@ -158,7 +163,7 @@ def build_corpus(
     items: list[CorpusItem] = []
     for arch, group, cond, day in itertools.product(archetypes, groups, conditions, sorted(dates)):
         template = PROMPT_TEMPLATES[arch][cond.name]
-        prompt = template.format(tickers=", ".join(group))
+        prompt = template.format(tickers=", ".join(group)) + " " + OUTPUT_CONTRACT
         coord = f"{arch.value}|{'-'.join(group)}|{cond.name}|{day.isoformat()}"
         qid = f"q{stable_seed(coord):08x}"
         items.append(
