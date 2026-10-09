@@ -2,6 +2,21 @@
 
 Thank you for your interest. MicroWorld is a research-grade framework — contributions are welcome across theory, implementation, and empirical validation.
 
+## Quick Start for First-Time Contributors
+
+New here? Start with an issue labelled [`good first issue`](https://github.com/hongjin-he/MicroWorld/labels/good%20first%20issue) — each one is scoped to a few hours and doesn't require reading the theory.
+
+```bash
+git clone https://github.com/<you>/MicroWorld && cd MicroWorld
+python -m venv .venv && source .venv/bin/activate
+pip install -r requirements.txt pytest
+pytest -q            # should be all green before you change anything
+```
+
+Comment on the issue to claim it, open a PR that says `Closes #<n>`, and make sure `pytest -q` passes. Small PRs are merged fastest. Issues-first is only required for the larger theory/implementation changes described below.
+
+---
+
 ## Ways to Contribute
 
 ### Theory Extensions
@@ -23,7 +38,7 @@ We have one documented Lyapunov signal (COVID-19 pre-crash, Feb 20 2020, RI = 0.
 
 ### Implementation (Engineering Repo)
 
-See [us-equity-world-model](https://github.com/hongjin-he/us-equity-world-model) for the engineering codebase. Open issues there for:
+The engineering code lives in this repo (`agents/`, `events/`, `game/`, `state/`, `controller/`, `backtest/`). Good places to contribute:
 
 - Level 0 cross-market module (current implementation covers Levels 1–3 only)
 - Alternative data connectors for information hierarchy calibration

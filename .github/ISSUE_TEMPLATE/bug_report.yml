@@ -1,0 +1,21 @@
+name: Bug report
+description: Something crashes, gives wrong numbers, or doesn't match the math
+labels: [bug]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened?
+      description: Include the command you ran and the full traceback or wrong output.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What did you expect?
+    validations:
+      required: true
+  - type: input
+    id: env
+    attributes:
+      label: Python version / OS
