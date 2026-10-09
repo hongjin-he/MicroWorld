@@ -17,9 +17,7 @@
 [![Forks](https://img.shields.io/github/forks/hongjin-he/MicroWorld?style=social)](https://github.com/hongjin-he/MicroWorld/network/members)
 
 [![CI](https://github.com/hongjin-he/MicroWorld/actions/workflows/ci.yml/badge.svg)](https://github.com/hongjin-he/MicroWorld/actions)
-[![Tests](https://img.shields.io/badge/tests-50%2F50%20passing-brightgreen.svg)](tests/)
-[![Paper](https://img.shields.io/badge/配套论文-Alpha%20Flow%2002-red.svg)](https://github.com/hongjin-he/mathmatical-framework-for-world-models-in-quant-finance)
-[![Implementation](https://img.shields.io/badge/工程实现-MicroWorld--Impl-blueviolet.svg)](https://github.com/hongjin-he/us-equity-world-model)
+[![Paper](https://img.shields.io/badge/配套论文-Alpha%20Flow%2002-red.svg)](https://github.com/hongjin-he/Mathematical-Framework-For-MicroUniverse)
 [![Python](https://img.shields.io/badge/python-3.11+-blue.svg)](https://python.org)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 
@@ -704,7 +702,7 @@ $$+\;\underbrace{\sum_{\substack{w:\,\text{模式I/II}\\\tau_w \leq t}} (T_w - I
 
 ## 七大定理
 
-框架的全部保证，浓缩为一张表。证明见[配套论文](https://github.com/hongjin-he/mathmatical-framework-for-world-models-in-quant-finance)；数值验证见 [Day 12](notebooks/day12_seven_theorems.ipynb)。
+框架的全部保证，浓缩为一张表。证明见[配套论文](https://github.com/hongjin-he/Mathematical-Framework-For-MicroUniverse)；数值验证见 [Day 12](notebooks/day12_seven_theorems.ipynb)。
 
 | # | 结果 | 陈述（非正式） | 后果 | 代码 / 演示 |
 |---|---|---|---|---|
@@ -963,8 +961,7 @@ MicroWorld/
 
 | 资源 | 链接 | 内容 |
 |---|---|---|
-| **工程实现**（E-Game-C） | [us-equity-world-model](https://github.com/hongjin-he/us-equity-world-model) | 完整构建手册：数据层、编码器、MFG求解器、控制器、回测、部署 |
-| **数学论文** | [mathmatical-framework-for-world-models-in-quant-finance](https://github.com/hongjin-he/mathmatical-framework-for-world-models-in-quant-finance) | Alpha Flow 02：全部证明，9个定理，25页 |
+| **数学论文** | [Mathematical-Framework-For-MicroUniverse](https://github.com/hongjin-he/Mathematical-Framework-For-MicroUniverse) | Alpha Flow 02：全部证明，9个定理，25页 |
 | **心路历程** | [docs/JOURNEY.md](docs/JOURNEY.md) | 从世界模型怀疑论者到这套架构——以及完成说服的那些机器人、汽车与梦境 |
 | **第二阶段设计** | [docs/PHASE2_NEURAL_GAME.md](docs/PHASE2_NEURAL_GAME.md) | 神经网络博弈结构：每个神经元本身是一个主体网络 |
 | **资源与资金用途** | [RESOURCES.md](RESOURCES.md) | 数据+算力按场景定价；实验E7–E11 |
@@ -1191,6 +1188,6 @@ MicroWorld 正在寻找恰好四类对手方：
 
 *这不是一个量化工具。这是理解金融市场的新范式。*
 
-[网站](https://hongjin-he.github.io) · [工程仓库](https://github.com/hongjin-he/us-equity-world-model) · [LinkedIn](https://www.linkedin.com/in/hongjinhe-hkust-edu)
+[网站](https://hongjin-he.github.io) · [LinkedIn](https://www.linkedin.com/in/hongjinhe-hkust-edu)
 
 </div>

@@ -103,7 +103,7 @@ python -m pytest tests/ -v           # 테스트 스위트 (50개)
 ## 링크
 
 - **전체 README**: [English](../../README.md) · [中文](../../README_CN.md)
-- **수학 논문** (전체 증명 · 25쪽): [companion paper](https://github.com/hongjin-he/mathmatical-framework-for-world-models-in-quant-finance)
+- **수학 논문** (전체 증명 · 25쪽): [companion paper](https://github.com/hongjin-he/Mathematical-Framework-For-MicroUniverse)
 - **개발 여정**: [docs/JOURNEY.md](../JOURNEY.md)
 - **파트너십·연락**: [LinkedIn](https://www.linkedin.com/in/hongjinhe-hkust-edu) · [X](https://x.com/Mr_Abstractor) · [GitHub issues](https://github.com/hongjin-he/MicroWorld/issues)
 

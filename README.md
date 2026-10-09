@@ -23,9 +23,7 @@
 [![Watchers](https://img.shields.io/github/watchers/hongjin-he/MicroWorld?style=social)](https://github.com/hongjin-he/MicroWorld/watchers)
 
 [![CI](https://github.com/hongjin-he/MicroWorld/actions/workflows/ci.yml/badge.svg)](https://github.com/hongjin-he/MicroWorld/actions)
-[![Tests](https://img.shields.io/badge/tests-50%2F50%20passing-brightgreen.svg)](tests/)
-[![Paper](https://img.shields.io/badge/companion%20paper-Alpha%20Flow%2002-red.svg)](https://github.com/hongjin-he/mathmatical-framework-for-world-models-in-quant-finance)
-[![Implementation](https://img.shields.io/badge/engineering%20repo-MicroWorld--Impl-blueviolet.svg)](https://github.com/hongjin-he/us-equity-world-model)
+[![Paper](https://img.shields.io/badge/companion%20paper-Alpha%20Flow%2002-red.svg)](https://github.com/hongjin-he/Mathematical-Framework-For-MicroUniverse)
 [![Python](https://img.shields.io/badge/python-3.11+-blue.svg)](https://python.org)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 
@@ -723,7 +721,7 @@ Reading the equation term by term:
 
 ## The Seven Theorems
 
-The framework's guarantees, in one table. Proofs in the [companion paper](https://github.com/hongjin-he/mathmatical-framework-for-world-models-in-quant-finance); numerical verification in [Day 12](notebooks/day12_seven_theorems.ipynb).
+The framework's guarantees, in one table. Proofs in the [companion paper](https://github.com/hongjin-he/Mathematical-Framework-For-MicroUniverse); numerical verification in [Day 12](notebooks/day12_seven_theorems.ipynb).
 
 | # | Result | Statement (informal) | Consequence | Code / Demo |
 |---|---|---|---|---|
@@ -982,8 +980,7 @@ MicroWorld/
 
 | Resource | Link | Contents |
 |---|---|---|
-| **Engineering Implementation** (E-Game-C) | [us-equity-world-model](https://github.com/hongjin-he/us-equity-world-model) | Full build manual: data layer, encoder, MFG solver, controller, backtest, deployment |
-| **Mathematical Paper** | [mathmatical-framework-for-world-models-in-quant-finance](https://github.com/hongjin-he/mathmatical-framework-for-world-models-in-quant-finance) | Alpha Flow 02: all proofs, 9 theorems, 25 pages |
+| **Mathematical Paper** | [Mathematical-Framework-For-MicroUniverse](https://github.com/hongjin-he/Mathematical-Framework-For-MicroUniverse) | Alpha Flow 02: all proofs, 9 theorems, 25 pages |
 | **The Journey** | [docs/JOURNEY.md](docs/JOURNEY.md) | From world-model skeptic to this architecture — with the robots, cars, and dreams that did the converting |
 | **Phase 2 Design** | [docs/PHASE2_NEURAL_GAME.md](docs/PHASE2_NEURAL_GAME.md) | The Neural Network Game Structure: every neuron an agent-network |
 | **Resources & Use of Funds** | [RESOURCES.md](RESOURCES.md) | Data + compute, priced by scenario; experiments E7–E11 |
@@ -1210,6 +1207,6 @@ Machine-readable metadata: [CITATION.cff](CITATION.cff).
 
 *This is not a quant tool. It is a new paradigm for understanding financial markets.*
 
-[Website](https://hongjin-he.github.io) · [Engineering Repo](https://github.com/hongjin-he/us-equity-world-model) · [LinkedIn](https://www.linkedin.com/in/hongjinhe-hkust-edu)
+[Website](https://hongjin-he.github.io) · [LinkedIn](https://www.linkedin.com/in/hongjinhe-hkust-edu)
 
 </div>
