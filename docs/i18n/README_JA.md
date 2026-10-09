@@ -103,7 +103,7 @@ python -m pytest tests/ -v           # テストスイート（50件）
 ## リンク
 
 - **完全版README**：[English](../../README.md) · [中文](../../README_CN.md)
-- **数学論文**（全証明・25頁）：[companion paper](https://github.com/hongjin-he/mathmatical-framework-for-world-models-in-quant-finance)
+- **数学論文**（全証明・25頁）：[companion paper](https://github.com/hongjin-he/Mathematical-Framework-For-MicroUniverse)
 - **開発の心路歴程**：[docs/JOURNEY.md](../JOURNEY.md)
 - **提携・連絡**：[LinkedIn](https://www.linkedin.com/in/hongjinhe-hkust-edu) · [X](https://x.com/Mr_Abstractor) · [GitHub issues](https://github.com/hongjin-he/MicroWorld/issues)
 
